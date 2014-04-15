@@ -1,5 +1,4 @@
-# Atoms
-## Atomic Development for Modern WebApps
+# Atoms.App.Stripe
 Copyright 2013-2014, Javier Jimenez Villar
 
-### Extension: Atoms.App.Stripe
+Esta extensión te permitirá trabajar con el servicio Stripe para pagos online.
