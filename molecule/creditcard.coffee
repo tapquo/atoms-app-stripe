@@ -77,7 +77,7 @@ class Atoms.Molecule.StripeCreditCard extends Atoms.Molecule.Form
         Atoms.App?.Modal?.Loading?.hide()
         console.log xhr
       error: (xhr, error) =>
-        #@bubble "error" 
+        #@bubble "error"
         Atoms.App?.Modal?.Loading?.hide()
 
 
@@ -89,6 +89,3 @@ __loadScript = (callback) ->
   script.setAttribute "data-extension", "stripe"
   script.onload = -> callback.call @ if callback?
   document.body.appendChild script
-
-Atoms.$ ->
-  new Atoms.Molecule.StripeCreditCard container: "body", url: "http://localhost:8080/stripe", stripeKey: "pk_test_INaJhR0dwOhLo9PAfK4IKH6n"
