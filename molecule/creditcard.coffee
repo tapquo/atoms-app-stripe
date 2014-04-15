@@ -2,87 +2,89 @@
 
 class Atoms.Molecule.StripeCreditCard extends Atoms.Molecule.Form
 
-  @available: ["Atom.Input", "Atom.Button"]
-
-  @events   : ["submit"]
-
   @extends  : true
 
   @default  :
     events  : ["submit", "error"]
     children: [
-        "Atom.Input": id: "card_number", placeholder: "Type your credit card number", required: true, events: ["change"], callbacks: ["validate"]
+        "Atom.Input": id: "number", type: "tel", placeholder: "Credit card number", required: true, events: ["keyup"]
       ,
-        "Atom.Input": id: "card_cvc", placeholder: "Type your credit card cvc", required: true, events: ["change"], callbacks: ["validate"]
+        "Atom.Input": id: "month", type: "tel", placeholder: "MM", events: ["keyup"]
       ,
-        "Atom.Input": id: "card_expiry_month", placeholder: "MM", required: true, events: ["change"], callbacks: ["validate"]
+        "Atom.Input": id: "year", type: "tel", placeholder: "YYYY", events: ["keyup"]
       ,
-        "Atom.Input": id: "card_expiry_year", placeholder: "YYYY", required: true, events: ["change"], callbacks: ["validate"]
+        "Atom.Input": id: "cvc", type: "tel", placeholder: "CVC", events: ["keyup"]
       ,
-        "Atom.Button": text: "submit payment", style: "fluid accept"
+        "Atom.Button": id: "submit", text: "Send Payment", style: "fluid accept", disabled: true
     ]
 
-  output: ->
+  constructor: ->
     super
-    exists = Atoms.$("[data-extension=stripe]").length > 0
-    if exists then do @__init else __loadScript @__init
+    do __loadScript
+    if @attributes.amount
+      @submit.el.html (@attributes.concept or "Pay") + " #{@attributes.amount}"
 
-  # Children Bubble Events
-  onButtonTouch: (event, form) ->
-    event.preventDefault()
-
-    if @attributes.url? and @attributes.stripeKey? and @validate()
-      Atoms.App?.Modal?.Loading?.show()
-
-      Stripe.setPublishableKey @attributes.stripeKey
-      parameters =
-        number    : @card_number.el.val()
-        cvc       : @card_cvc.el.val()
-        exp_month : @card_expiry_month.el.val()
-        exp_year  : @card_expiry_year.el.val()
-      window.Stripe.createToken parameters, @_onStripeCreateToken
-    else
-      @bubble "error", "?"
-    false
-
-  # Private Methods
-  _onStripeCreateToken: (status, response) =>
-    if response.error
-      Atoms.App?.Modal?.Loading?.hide()
-      #@bubble "error", response.error
-    else
-      @post response.id
-
-  validate: ->
-    if not Stripe.validateCardNumber @card_number.el.val()
-      console.log "Invalid Card Number"
-      false
-    else if not Stripe.validateCVC @card_cvc.el.val()
-      console.log "Invalid CVC"
-      false
-    else if not Stripe.validateExpiry @card_expiry_month.el.val(), @card_expiry_year.el.val()
-      console.log "Invalid Expiry Date"
-      false
-    else true
-
+  # Instance Methods
   post: (token) =>
+    parameters =
+      token     : token
+      amount    : @attributes.amount
+      reference : @attributes.reference
+
     $$.ajax
       url         : @attributes.url
       type        : "POST"
-      data        : { stripeToken: token}
-      dataType    : 'json'
+      dataType    : "json"
+      data        : parameters
       contentType : "application/x-www-form-urlencoded"
-      success: (xhr) ->
-        #@bubble "submit"
+      success: (xhr) =>
+        @bubble "submit", xhr
         Atoms.App?.Modal?.Loading?.hide()
-        console.log xhr
       error: (xhr, error) =>
-        #@bubble "error"
+        @bubble "error", error
         Atoms.App?.Modal?.Loading?.hide()
 
+  # Children Bubble Events
+  onButtonTouch: (event, form) ->
+    Atoms.App?.Modal?.Loading?.show()
+
+    Stripe.setPublishableKey @attributes.key
+    parameters =
+      number    : @number.value()
+      cvc       : @cvc.value()
+      exp_month : @month.value()
+      exp_year  : @year.value()
+    window.Stripe.createToken parameters, (status, response) =>
+      if response.error
+        Atoms.App?.Modal?.Loading?.hide()
+        @bubble "error", response.error
+      else
+        @post response.id
+    false
+
+  onInputKeyup: ->
+    valid = true
+    input.error?(false) for input in @children
+    if not @attributes.url or not @attributes.key
+      valid = false
+    else if not Stripe.validateCardNumber @number.value()
+      valid = false
+      @number.error true
+    else if not Stripe.validateExpiry @month.value(), @year.value()
+      valid = false
+      @month.error true
+      @year.error true
+    else if not Stripe.validateCVC @cvc.value()
+      valid = false
+      @cvc.error true
+
+    if valid
+      @submit.el.removeAttr "disabled"
+    else
+      @submit.el.attr "disabled", true
+    false
 
 __loadScript = (callback) ->
-  window.google = maps: {}
   script = document.createElement("script")
   script.type = "text/javascript"
   script.src = "https://js.stripe.com/v1/"
