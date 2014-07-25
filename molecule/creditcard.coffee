@@ -41,14 +41,14 @@ class Atoms.Molecule.StripeCreditCard extends Atoms.Molecule.Form
       contentType : "application/x-www-form-urlencoded"
       success: (xhr) =>
         @bubble "submit", xhr
-        Atoms.App?.Modal?.Loading?.hide()
+        __?.Dialog.Loading.hide()
       error: (xhr, error) =>
         @bubble "error", error
-        Atoms.App?.Modal?.Loading?.hide()
+        __?.Dialog.Loading.hide()
 
   # Children Bubble Events
   onButtonTouch: (event, form) ->
-    Atoms.App?.Modal?.Loading?.show()
+    __?.Dialog.Loading.show()
 
     Stripe.setPublishableKey @attributes.key
     parameters =
@@ -58,7 +58,7 @@ class Atoms.Molecule.StripeCreditCard extends Atoms.Molecule.Form
       exp_year  : @year.value()
     window.Stripe.createToken parameters, (status, response) =>
       if response.error
-        Atoms.App?.Modal?.Loading?.hide()
+        __?.Dialog.Loading.hide()
         @bubble "error", response.error
       else
         @post response.id

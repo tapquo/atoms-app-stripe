@@ -1,1 +1,1 @@
-[data-molecule=form][data-extend=stripecreditcard] [data-atom=input]:nth-child(n+2){width:31.5%}[data-molecule=form][data-extend=stripecreditcard] [data-atom=input]:nth-child(n+3){margin-left:2.5%}
+[data-molecule-form=stripecreditcard] [data-atom-input]:nth-child(n+2){width:31.5%}[data-molecule-form=stripecreditcard] [data-atom-input]:nth-child(n+3){margin-left:2.5%}
